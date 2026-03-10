@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>主页</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+    }
+    /* 导航栏 */
+    .navbar {
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 0 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+    .navbar .logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1890ff;
+    }
+    .navbar .nav-links a {
+      margin-left: 20px;
+      padding: 8px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    .btn-login-nav {
+      color: #1890ff;
+      border: 1px solid #1890ff;
+    }
+    .btn-login-nav:hover {
+      background: #e6f7ff;
+    }
+    .btn-register-nav {
+      background: #1890ff;
+      color: #fff !important;
+      border: 1px solid #1890ff;
+    }
+    .btn-register-nav:hover {
+      background: #40a9ff;
+      border-color: #40a9ff;
+    }
+    /* 已登录状态 */
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 14px;
+    }
+    .user-info .username {
+      color: #333;
+      font-weight: 600;
+    }
+    .user-info a {
+      text-decoration: none;
+      padding: 6px 16px;
+      border-radius: 6px;
+      transition: all 0.3s;
+    }
+    .btn-edit {
+      color: #1890ff;
+      border: 1px solid #1890ff;
+    }
+    .btn-edit:hover { background: #e6f7ff; }
+    .btn-logout {
+      color: #ff4d4f;
+      border: 1px solid #ff4d4f;
+    }
+    .btn-logout:hover { background: #fff1f0; }
+
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="logo">Demo4</div>
+    <!-- 未登录 -->
+    <div class="nav-links" id="guestNav">
+      <a href="/login.html" class="btn-login-nav">登录</a>
+      <a href="/register.html" class="btn-register-nav">注册</a>
+    </div>
+    <!-- 已登录 -->
+    <div class="user-info" id="userNav" style="display:none;">
+      <span class="username" id="displayName"></span>
+      <a href="/change-password.html" class="btn-edit">修改密码</a>
+      <a href="/logout" class="btn-logout">退出</a>
+    </div>
+  </nav>
+
+  <script>
+    fetch('/api/currentUser')
+      .then(r => r.json())
+      .then(data => {
+        if (data.loggedIn) {
+          document.getElementById('guestNav').style.display = 'none';
+          document.getElementById('userNav').style.display = 'flex';
+          document.getElementById('displayName').textContent = data.username;
+        }
+      });
+  </script>
+
+</body>
+</html>
