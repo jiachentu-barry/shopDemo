@@ -78,12 +78,210 @@
     }
     .btn-logout:hover { background: #fff1f0; }
 
+    /* 搜索框 */
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: #f5f5f5;
+      border-radius: 20px;
+      padding: 0 16px;
+      height: 36px;
+      transition: all 0.3s;
+      border: 1px solid transparent;
+    }
+    .search-box:focus-within {
+      background: #fff;
+      border-color: #1890ff;
+      box-shadow: 0 0 0 2px rgba(24,144,255,0.1);
+    }
+    .search-box input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 14px;
+      width: 200px;
+      color: #333;
+    }
+    .search-box input::placeholder { color: #bbb; }
+    .search-box .search-icon {
+      color: #999;
+      font-size: 14px;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+    .search-box .clear-btn {
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: #bbb;
+      font-size: 16px;
+      padding: 0 0 0 6px;
+      display: none;
+      line-height: 1;
+    }
+    .search-box .clear-btn:hover { color: #999; }
+
+    /* 商品展示区 */
+    .product-section {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .section-title {
+      font-size: 22px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 24px;
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .product-card {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    }
+    .product-card .img-wrap {
+      width: 100%;
+      height: 200px;
+      overflow: hidden;
+      background: #f5f5f5;
+    }
+    .product-card .img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .product-card .info {
+      padding: 16px;
+    }
+    .product-card .info .name {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .product-card .info .price {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ff4d4f;
+    }
+    .product-card .info .price::before {
+      content: '¥';
+      font-size: 14px;
+    }
+    .no-products {
+      text-align: center;
+      color: #999;
+      font-size: 16px;
+      padding: 60px 0;
+    }
+
+    /* 标题栏含切换按钮 */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .view-toggle {
+      display: flex;
+      gap: 4px;
+      background: #fff;
+      border-radius: 8px;
+      padding: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .view-toggle button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 32px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      cursor: pointer;
+      color: #999;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+    .view-toggle button.active {
+      background: #1890ff;
+      color: #fff;
+    }
+    .view-toggle button:hover:not(.active) {
+      background: #f0f0f0;
+    }
+
+    /* 列表模式 */
+    .product-grid.list-mode {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .list-mode .product-card {
+      display: flex;
+      flex-direction: row;
+    }
+    .list-mode .product-card .img-wrap {
+      width: 180px;
+      min-width: 180px;
+      height: 140px;
+    }
+    .list-mode .product-card .info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 16px 24px;
+    }
+    .list-mode .product-card .info .name {
+      font-size: 18px;
+      margin-bottom: 10px;
+      white-space: normal;
+    }
+    .list-mode .product-card .info .desc {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 10px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .list-mode .product-card .info .price {
+      font-size: 20px;
+    }
+    /* 网格模式下隐藏描述 */
+    .product-card .info .desc {
+      display: none;
+    }
+    .list-mode .product-card .info .desc {
+      display: -webkit-box;
+    }
+
   </style>
 </head>
 <body>
 
   <nav class="navbar">
     <div class="logo">Demo4</div>
+    <div class="search-box">
+      <span class="search-icon">&#128269;</span>
+      <input type="text" id="searchInput" placeholder="搜索商品...">
+      <button class="clear-btn" id="clearSearch">&times;</button>
+    </div>
     <!-- 未登录 -->
     <div class="nav-links" id="guestNav">
       <a href="/login.html" class="btn-login-nav">登录</a>
@@ -92,10 +290,25 @@
     <!-- 已登录 -->
     <div class="user-info" id="userNav" style="display:none;">
       <span class="username" id="displayName"></span>
+      <a href="/product-upload.html" class="btn-edit">商品上传</a>
+      <a href="/product-manage.html" class="btn-edit">商品管理</a>
       <a href="/change-password.html" class="btn-edit">修改密码</a>
       <a href="/logout" class="btn-logout">退出</a>
     </div>
   </nav>
+
+  <div class="product-section">
+    <div class="section-header">
+      <div class="section-title">商品展示</div>
+      <div class="view-toggle">
+        <button id="gridBtn" class="active" title="网格模式">&#9638;</button>
+        <button id="listBtn" title="列表模式">&#9776;</button>
+      </div>
+    </div>
+    <div class="product-grid" id="productGrid">
+      <div class="no-products" id="noProducts">暂无商品</div>
+    </div>
+  </div>
 
   <script>
     fetch('/api/currentUser')
@@ -106,6 +319,86 @@
           document.getElementById('userNav').style.display = 'flex';
           document.getElementById('displayName').textContent = data.username;
         }
+      });
+
+    // 视图切换
+    const gridBtn = document.getElementById('gridBtn');
+    const listBtn = document.getElementById('listBtn');
+    const productGrid = document.getElementById('productGrid');
+
+    gridBtn.addEventListener('click', function() {
+      productGrid.classList.remove('list-mode');
+      gridBtn.classList.add('active');
+      listBtn.classList.remove('active');
+    });
+    listBtn.addEventListener('click', function() {
+      productGrid.classList.add('list-mode');
+      listBtn.classList.add('active');
+      gridBtn.classList.remove('active');
+    });
+
+    // 商品数据
+    let allProducts = [];
+
+    function renderProducts(products) {
+      const grid = document.getElementById('productGrid');
+      const noProducts = document.getElementById('noProducts');
+      grid.querySelectorAll('.product-card').forEach(el => el.remove());
+      if (!products || products.length === 0) {
+        noProducts.style.display = 'block';
+        noProducts.textContent = searchInput.value ? '没有找到匹配的商品' : '暂无商品';
+        return;
+      }
+      noProducts.style.display = 'none';
+      products.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        const desc = p.description ? p.description.replace(/</g, '&lt;') : '';
+        card.innerHTML =
+          '<div class="img-wrap"><img src="' + p.imagePath + '" alt="' + p.name.replace(/"/g, '&quot;') + '"></div>' +
+          '<div class="info">' +
+            '<div class="name">' + p.name.replace(/</g, '&lt;') + '</div>' +
+            '<div class="desc">' + desc + '</div>' +
+            '<div class="price">' + Number(p.price).toFixed(2) + '</div>' +
+          '</div>';
+        grid.appendChild(card);
+      });
+    }
+
+    // 搜索
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearSearch');
+
+    searchInput.addEventListener('input', function() {
+      clearBtn.style.display = this.value ? 'block' : 'none';
+      filterProducts();
+    });
+    clearBtn.addEventListener('click', function() {
+      searchInput.value = '';
+      clearBtn.style.display = 'none';
+      filterProducts();
+      searchInput.focus();
+    });
+
+    function filterProducts() {
+      const keyword = searchInput.value.trim().toLowerCase();
+      if (!keyword) {
+        renderProducts(allProducts.slice(0, 9));
+        return;
+      }
+      const filtered = allProducts.filter(p =>
+        p.name.toLowerCase().includes(keyword) ||
+        (p.description && p.description.toLowerCase().includes(keyword))
+      );
+      renderProducts(filtered);
+    }
+
+    // 加载商品列表
+    fetch('/api/product/list')
+      .then(r => r.json())
+      .then(products => {
+        allProducts = products || [];
+        renderProducts(allProducts.slice(0, 9));
       });
   </script>
 

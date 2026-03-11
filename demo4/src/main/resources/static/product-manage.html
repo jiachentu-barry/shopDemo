@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商品管理后台</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+    }
+    .header {
+      background: #fff;
+      padding: 16px 32px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { font-size: 22px; color: #333; }
+    .header a {
+      color: #1890ff;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .toolbar .count { color: #666; font-size: 14px; }
+    table {
+      width: 100%;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 14px;
+    }
+    th {
+      background: #fafafa;
+      color: #666;
+      font-weight: 600;
+    }
+    td img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #eee;
+    }
+    .btn {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-edit { background: #1890ff; color: #fff; }
+    .btn-delete { background: #ff4d4f; color: #fff; margin-left: 8px; }
+    .btn-save { background: #52c41a; color: #fff; }
+    .btn-cancel { background: #d9d9d9; color: #333; margin-left: 8px; }
+    .actions { white-space: nowrap; }
+    .empty {
+      text-align: center;
+      padding: 60px 0;
+      color: #999;
+      font-size: 16px;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      padding: 32px;
+      width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+    .modal h2 {
+      margin-bottom: 24px;
+      font-size: 20px;
+      color: #333;
+    }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      color: #555;
+      font-size: 14px;
+    }
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #1890ff;
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .current-image {
+      margin-top: 8px;
+    }
+    .current-image img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #eee;
+    }
+    .current-image span {
+      display: block;
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+    .msg {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 24px;
+      border-radius: 6px;
+      font-size: 14px;
+      z-index: 2000;
+      color: #fff;
+      transition: opacity 0.3s;
+    }
+    .msg-success { background: #52c41a; }
+    .msg-error { background: #ff4d4f; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>商品管理后台</h1>
+    <a href="/product-upload.html">+ 上传新商品</a>
+  </div>
+
+  <div class="container">
+    <div class="toolbar">
+      <span class="count" id="productCount">加载中...</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>图片</th>
+          <th>商品名称</th>
+          <th>价格</th>
+          <th>描述</th>
+          <th>创建时间</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="productTable">
+        <tr><td colspan="7" class="empty">加载中...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 编辑弹窗 -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h2>编辑商品</h2>
+      <form id="editForm">
+        <input type="hidden" id="editId">
+        <div class="form-group">
+          <label>商品名称</label>
+          <input type="text" id="editName" required>
+        </div>
+        <div class="form-group">
+          <label>价格</label>
+          <input type="number" id="editPrice" step="0.01" min="0" required>
+        </div>
+        <div class="form-group">
+          <label>描述</label>
+          <textarea id="editDescription" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>更换图片（可选）</label>
+          <input type="file" id="editImage" accept="image/*">
+          <div class="current-image" id="currentImageBox">
+            <span>当前图片：</span>
+            <img id="currentImage" src="" alt="当前图片">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-save">保存</button>
+          <button type="button" class="btn btn-cancel" onclick="closeModal()">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function showMsg(text, type) {
+      const el = document.createElement('div');
+      el.className = 'msg msg-' + type;
+      el.textContent = text;
+      document.body.appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; }, 2000);
+      setTimeout(() => { el.remove(); }, 2500);
+    }
+
+    function loadProducts() {
+      fetch('/api/product/list')
+        .then(r => r.json())
+        .then(products => {
+          const tbody = document.getElementById('productTable');
+          const countEl = document.getElementById('productCount');
+          countEl.textContent = '共 ' + products.length + ' 件商品';
+
+          if (products.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无商品</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = products.map(p => `
+            <tr>
+              <td>${p.id}</td>
+              <td><img src="${p.imagePath}" alt="${escapeHtml(p.name)}"></td>
+              <td>${escapeHtml(p.name)}</td>
+              <td>¥${Number(p.price).toFixed(2)}</td>
+              <td title="${escapeHtml(p.description)}">${escapeHtml(truncate(p.description, 30))}</td>
+              <td>${formatTime(p.createTime)}</td>
+              <td class="actions">
+                <button class="btn btn-edit" onclick='openEdit(${JSON.stringify(p).replace(/'/g, "&#39;")})'>编辑</button>
+                <button class="btn btn-delete" onclick="deleteProduct(${p.id})">删除</button>
+              </td>
+            </tr>
+          `).join('');
+        })
+        .catch(() => {
+          document.getElementById('productTable').innerHTML =
+            '<tr><td colspan="7" class="empty">加载失败，请刷新重试</td></tr>';
+        });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function truncate(str, len) {
+      if (!str) return '';
+      return str.length > len ? str.substring(0, len) + '...' : str;
+    }
+
+    function formatTime(t) {
+      if (!t) return '-';
+      if (Array.isArray(t)) {
+        const [y, m, d, h, mi] = t;
+        return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')} ${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}`;
+      }
+      return t.replace('T', ' ').substring(0, 16);
+    }
+
+    function openEdit(product) {
+      document.getElementById('editId').value = product.id;
+      document.getElementById('editName').value = product.name;
+      document.getElementById('editPrice').value = product.price;
+      document.getElementById('editDescription').value = product.description || '';
+      document.getElementById('editImage').value = '';
+      if (product.imagePath) {
+        document.getElementById('currentImage').src = product.imagePath;
+        document.getElementById('currentImageBox').style.display = 'block';
+      } else {
+        document.getElementById('currentImageBox').style.display = 'none';
+      }
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('editModal').classList.remove('active');
+    }
+
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData();
+      formData.append('id', document.getElementById('editId').value);
+      formData.append('name', document.getElementById('editName').value);
+      formData.append('price', document.getElementById('editPrice').value);
+      formData.append('description', document.getElementById('editDescription').value);
+      const imageFile = document.getElementById('editImage').files[0];
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
+
+      fetch('/api/product/update', {
+        method: 'PUT',
+        body: formData
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            showMsg(data.message, 'success');
+            closeModal();
+            loadProducts();
+          } else {
+            showMsg(data.message, 'error');
+          }
+        })
+        .catch(() => showMsg('更新失败', 'error'));
+    });
+
+    function deleteProduct(id) {
+      if (!confirm('确定要删除该商品吗？此操作不可恢复。')) return;
+      fetch('/api/product/delete/' + id, { method: 'DELETE' })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            showMsg(data.message, 'success');
+            loadProducts();
+          } else {
+            showMsg(data.message, 'error');
+          }
+        })
+        .catch(() => showMsg('删除失败', 'error'));
+    }
+
+    // 点击遮罩关闭弹窗
+    document.getElementById('editModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    loadProducts();
+  </script>
+</body>
+</html>

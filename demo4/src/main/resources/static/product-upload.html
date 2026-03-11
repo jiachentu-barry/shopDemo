@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>商品上传</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .upload-card {
+      background: #fff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      width: 460px;
+    }
+    .upload-card h1 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #333;
+      font-size: 24px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      color: #555;
+      font-size: 14px;
+    }
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #1890ff;
+      box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+    }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+      font-family: inherit;
+    }
+    /* 图片上传区域 */
+    .image-upload-area {
+      border: 2px dashed #d9d9d9;
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+    .image-upload-area:hover {
+      border-color: #1890ff;
+      background: #fafafa;
+    }
+    .image-upload-area.has-image {
+      padding: 10px;
+      border-color: #1890ff;
+    }
+    .image-upload-area input[type="file"] {
+      display: none;
+    }
+    .upload-icon {
+      font-size: 36px;
+      color: #bbb;
+      margin-bottom: 8px;
+    }
+    .upload-text {
+      color: #999;
+      font-size: 14px;
+    }
+    .image-preview {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 6px;
+      display: none;
+    }
+    .remove-image {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #ff4d4f;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      font-size: 14px;
+      cursor: pointer;
+      display: none;
+      line-height: 24px;
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 10px;
+      background: #1890ff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .btn-submit:hover {
+      background: #40a9ff;
+    }
+    .btn-submit:disabled {
+      background: #d9d9d9;
+      cursor: not-allowed;
+    }
+    .msg {
+      text-align: center;
+      margin-bottom: 16px;
+      font-size: 14px;
+      display: none;
+    }
+    .msg.success { color: #52c41a; }
+    .msg.error { color: #ff4d4f; }
+    .links {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+    .links a {
+      color: #1890ff;
+      text-decoration: none;
+    }
+    .links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="upload-card">
+    <h1>商品上传</h1>
+
+    <div class="msg" id="msg"></div>
+
+    <form id="productForm">
+      <div class="form-group">
+        <label for="name">商品名称</label>
+        <input type="text" id="name" name="name" placeholder="请输入商品名称" required>
+      </div>
+
+      <div class="form-group">
+        <label for="price">价格 (元)</label>
+        <input type="number" id="price" name="price" placeholder="请输入价格" step="0.01" min="0" required>
+      </div>
+
+      <div class="form-group">
+        <label for="description">商品描述</label>
+        <textarea id="description" name="description" placeholder="请输入商品描述" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>商品图片</label>
+        <div class="image-upload-area" id="dropZone">
+          <input type="file" id="imageInput" accept="image/*">
+          <div class="upload-icon" id="uploadIcon">&#128247;</div>
+          <div class="upload-text" id="uploadText">点击或拖拽图片到此处上传</div>
+          <img class="image-preview" id="imagePreview">
+          <button type="button" class="remove-image" id="removeBtn">&times;</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">上传商品</button>
+    </form>
+
+    <div class="links">
+      <a href="/">返回主页</a>
+    </div>
+  </div>
+
+  <script>
+    const dropZone = document.getElementById('dropZone');
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const uploadIcon = document.getElementById('uploadIcon');
+    const uploadText = document.getElementById('uploadText');
+    const removeBtn = document.getElementById('removeBtn');
+    const form = document.getElementById('productForm');
+    const msgEl = document.getElementById('msg');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // 点击上传区域触发文件选择
+    dropZone.addEventListener('click', function(e) {
+      if (e.target !== removeBtn) {
+        imageInput.click();
+      }
+    });
+
+    // 拖拽上传
+    dropZone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      dropZone.style.borderColor = '#1890ff';
+      dropZone.style.background = '#e6f7ff';
+    });
+    dropZone.addEventListener('dragleave', function() {
+      dropZone.style.borderColor = '#d9d9d9';
+      dropZone.style.background = '';
+    });
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropZone.style.borderColor = '#d9d9d9';
+      dropZone.style.background = '';
+      const files = e.dataTransfer.files;
+      if (files.length > 0 && files[0].type.startsWith('image/')) {
+        imageInput.files = files;
+        showPreview(files[0]);
+      }
+    });
+
+    // 文件选择变化
+    imageInput.addEventListener('change', function() {
+      if (this.files.length > 0) {
+        showPreview(this.files[0]);
+      }
+    });
+
+    function showPreview(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        imagePreview.src = e.target.result;
+        imagePreview.style.display = 'block';
+        uploadIcon.style.display = 'none';
+        uploadText.style.display = 'none';
+        removeBtn.style.display = 'block';
+        dropZone.classList.add('has-image');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // 移除图片
+    removeBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      imageInput.value = '';
+      imagePreview.style.display = 'none';
+      imagePreview.src = '';
+      uploadIcon.style.display = 'block';
+      uploadText.style.display = 'block';
+      removeBtn.style.display = 'none';
+      dropZone.classList.remove('has-image');
+    });
+
+    // 表单提交
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      if (!imageInput.files.length) {
+        showMsg('请选择商品图片', 'error');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '上传中...';
+
+      const formData = new FormData();
+      formData.append('name', document.getElementById('name').value);
+      formData.append('price', document.getElementById('price').value);
+      formData.append('description', document.getElementById('description').value);
+      formData.append('image', imageInput.files[0]);
+
+      fetch('/api/product/upload', {
+        method: 'POST',
+        body: formData
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          showMsg(data.message, 'success');
+          form.reset();
+          removeBtn.click();
+        } else {
+          showMsg(data.message, 'error');
+        }
+      })
+      .catch(() => {
+        showMsg('网络错误，请重试', 'error');
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '上传商品';
+      });
+    });
+
+    function showMsg(text, type) {
+      msgEl.textContent = text;
+      msgEl.className = 'msg ' + type;
+      msgEl.style.display = 'block';
+      setTimeout(() => { msgEl.style.display = 'none'; }, 3000);
+    }
+  </script>
+
+</body>
+</html>
