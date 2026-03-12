@@ -35,6 +35,7 @@ public class ProductController {
             @RequestParam("name") String name,
             @RequestParam("price") BigDecimal price,
             @RequestParam("description") String description,
+            @RequestParam("stock") Integer stock,
             @RequestParam("image") MultipartFile image) {
 
         Map<String, Object> result = new HashMap<>();
@@ -77,6 +78,7 @@ public class ProductController {
             product.setName(name);
             product.setPrice(price);
             product.setDescription(description);
+            product.setStock(stock);
             product.setImagePath("/uploads/" + filename);
 
             productService.addProduct(product);
@@ -102,6 +104,7 @@ public class ProductController {
             @RequestParam("name") String name,
             @RequestParam("price") BigDecimal price,
             @RequestParam("description") String description,
+            @RequestParam("stock") Integer stock,
             @RequestParam(value = "image", required = false) MultipartFile image) {
 
         Map<String, Object> result = new HashMap<>();
@@ -115,6 +118,7 @@ public class ProductController {
         product.setName(name);
         product.setPrice(price);
         product.setDescription(description);
+        product.setStock(stock);
 
         if (image != null && !image.isEmpty()) {
             String contentType = image.getContentType();

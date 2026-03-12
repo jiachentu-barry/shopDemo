@@ -21,6 +21,9 @@ public class Product {
 
     private String imagePath;
 
+    @Column(columnDefinition = "integer default 10")
+    private Integer stock;
+
     private LocalDateTime createTime;
 
     @PrePersist
@@ -66,6 +69,14 @@ public class Product {
 
     public void setImagePath(String imagePath) {
         this.imagePath = imagePath;
+    }
+
+    public Integer getStock() {
+        return stock;
+    }
+
+    public void setStock(Integer stock) {
+        this.stock = stock;
     }
 
     public LocalDateTime getCreateTime() {

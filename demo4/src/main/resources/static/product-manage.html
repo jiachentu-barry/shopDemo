@@ -187,13 +187,14 @@
           <th>图片</th>
           <th>商品名称</th>
           <th>价格</th>
+          <th>库存</th>
           <th>描述</th>
           <th>创建时间</th>
           <th>操作</th>
         </tr>
       </thead>
       <tbody id="productTable">
-        <tr><td colspan="7" class="empty">加载中...</td></tr>
+        <tr><td colspan="8" class="empty">加载中...</td></tr>
       </tbody>
     </table>
   </div>
@@ -215,6 +216,10 @@
         <div class="form-group">
           <label>描述</label>
           <textarea id="editDescription" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>库存数量</label>
+          <input type="number" id="editStock" min="0" required>
         </div>
         <div class="form-group">
           <label>更换图片（可选）</label>
@@ -251,7 +256,7 @@
           countEl.textContent = '共 ' + products.length + ' 件商品';
 
           if (products.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="empty">暂无商品</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无商品</td></tr>';
             return;
           }
 
@@ -261,6 +266,7 @@
               <td><img src="${p.imagePath}" alt="${escapeHtml(p.name)}"></td>
               <td>${escapeHtml(p.name)}</td>
               <td>¥${Number(p.price).toFixed(2)}</td>
+              <td>${p.stock != null ? p.stock : 0}</td>
               <td title="${escapeHtml(p.description)}">${escapeHtml(truncate(p.description, 30))}</td>
               <td>${formatTime(p.createTime)}</td>
               <td class="actions">
@@ -272,7 +278,7 @@
         })
         .catch(() => {
           document.getElementById('productTable').innerHTML =
-            '<tr><td colspan="7" class="empty">加载失败，请刷新重试</td></tr>';
+            '<tr><td colspan="8" class="empty">加载失败，请刷新重试</td></tr>';
         });
     }
 
@@ -302,6 +308,7 @@
       document.getElementById('editName').value = product.name;
       document.getElementById('editPrice').value = product.price;
       document.getElementById('editDescription').value = product.description || '';
+      document.getElementById('editStock').value = product.stock != null ? product.stock : 0;
       document.getElementById('editImage').value = '';
       if (product.imagePath) {
         document.getElementById('currentImage').src = product.imagePath;
@@ -323,6 +330,7 @@
       formData.append('name', document.getElementById('editName').value);
       formData.append('price', document.getElementById('editPrice').value);
       formData.append('description', document.getElementById('editDescription').value);
+      formData.append('stock', document.getElementById('editStock').value);
       const imageFile = document.getElementById('editImage').files[0];
       if (imageFile) {
         formData.append('image', imageFile);

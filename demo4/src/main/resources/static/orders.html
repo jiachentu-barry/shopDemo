@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的订单</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+    }
+    .header {
+      background: #fff;
+      padding: 16px 32px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { font-size: 22px; color: #333; }
+    .header a { color: #1890ff; text-decoration: none; font-size: 14px; }
+    .container {
+      max-width: 900px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+    .empty {
+      text-align: center;
+      padding: 80px 0;
+      color: #999;
+      font-size: 16px;
+    }
+    .empty a { color: #1890ff; text-decoration: none; }
+    .order-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      margin-bottom: 16px;
+      overflow: hidden;
+      transition: box-shadow 0.3s;
+    }
+    .order-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+    .order-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      background: #fafafa;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .order-card-header .order-no {
+      font-size: 13px;
+      color: #999;
+    }
+    .order-card-header .order-no span { color: #333; font-weight: 600; }
+    .status-badge {
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-PENDING { background: #fff7e6; color: #fa8c16; }
+    .status-PAID { background: #e6f7ff; color: #1890ff; }
+    .status-SHIPPED { background: #f6ffed; color: #52c41a; }
+    .status-COMPLETED { background: #f6ffed; color: #52c41a; }
+    .status-CANCELLED { background: #f5f5f5; color: #999; }
+
+    .order-card-body {
+      padding: 16px 20px;
+    }
+    .order-items-preview {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      overflow: hidden;
+    }
+    .order-items-preview img {
+      width: 52px;
+      height: 52px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #eee;
+      flex-shrink: 0;
+    }
+    .order-items-preview .more {
+      font-size: 13px;
+      color: #999;
+      white-space: nowrap;
+    }
+
+    .order-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      border-top: 1px solid #f0f0f0;
+    }
+    .order-card-footer .summary {
+      font-size: 14px;
+      color: #666;
+    }
+    .order-card-footer .summary .amount {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ff4d4f;
+    }
+    .order-card-footer .summary .amount::before { content: '¥'; font-size: 12px; }
+    .order-card-footer .actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-sm {
+      padding: 6px 18px;
+      border: 1px solid #d9d9d9;
+      border-radius: 16px;
+      font-size: 13px;
+      cursor: pointer;
+      background: #fff;
+      color: #666;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .btn-sm:hover { border-color: #1890ff; color: #1890ff; }
+    .btn-sm-pay { background: #ff4d4f; color: #fff; border-color: #ff4d4f; }
+    .btn-sm-pay:hover { background: #ff7875; border-color: #ff7875; color: #fff; }
+    .msg {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 24px;
+      border-radius: 6px;
+      font-size: 14px;
+      z-index: 2000;
+      color: #fff;
+    }
+    .msg-success { background: #52c41a; }
+    .msg-error { background: #ff4d4f; }
+    .login-tip {
+      text-align: center;
+      padding: 80px 0;
+      color: #999;
+      font-size: 16px;
+    }
+    .login-tip a { color: #1890ff; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📦 我的订单</h1>
+    <a href="/">← 返回主页</a>
+  </div>
+  <div class="container" id="content">
+    <div style="text-align:center;padding:40px;color:#999;">加载中...</div>
+  </div>
+
+  <script>
+    function showMsg(text, type) {
+      const el = document.createElement('div');
+      el.className = 'msg msg-' + type;
+      el.textContent = text;
+      document.body.appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; }, 2000);
+      setTimeout(() => { el.remove(); }, 2500);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    function formatTime(t) {
+      if (!t) return '-';
+      if (Array.isArray(t)) {
+        const [y, m, d, h, mi] = t;
+        return y + '-' + String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0') +
+               ' ' + String(h).padStart(2,'0') + ':' + String(mi).padStart(2,'0');
+      }
+      return t.replace('T', ' ').substring(0, 16);
+    }
+
+    function statusText(s) {
+      const map = { PENDING: '待付款', PAID: '已付款', SHIPPED: '已发货', COMPLETED: '已完成', CANCELLED: '已取消' };
+      return map[s] || s;
+    }
+
+    function loadOrders() {
+      fetch('/api/order/list')
+        .then(r => r.json())
+        .then(data => {
+          const container = document.getElementById('content');
+          if (!data.success) {
+            container.innerHTML = '<div class="login-tip">请先 <a href="/login.html">登录</a> 后查看订单</div>';
+            return;
+          }
+          const orders = data.orders || [];
+          if (orders.length === 0) {
+            container.innerHTML = '<div class="empty">暂无订单 <a href="/">去逛逛</a></div>';
+            return;
+          }
+          container.innerHTML = orders.map(o => {
+            const imgs = (o.items || []).slice(0, 4).map(i =>
+              '<img src="' + (i.productImage || '') + '" alt="' + escapeHtml(i.productName) + '">'
+            ).join('');
+            const moreCount = (o.items || []).length > 4 ? '<span class="more">等' + o.items.length + '件</span>' : '';
+
+            let actions = '<a class="btn-sm" href="/order-detail.html?orderNo=' + encodeURIComponent(o.orderNo) + '">查看详情</a>';
+            if (o.status === 'PENDING') {
+              actions += '<a class="btn-sm btn-sm-pay" href="/order-detail.html?orderNo=' + encodeURIComponent(o.orderNo) + '">去支付</a>';
+            }
+
+            return `
+              <div class="order-card">
+                <div class="order-card-header">
+                  <div class="order-no">订单号: <span>${escapeHtml(o.orderNo)}</span> &nbsp; ${formatTime(o.createTime)}</div>
+                  <span class="status-badge status-${o.status}">${statusText(o.status)}</span>
+                </div>
+                <div class="order-card-body">
+                  <div class="order-items-preview">${imgs}${moreCount}</div>
+                </div>
+                <div class="order-card-footer">
+                  <div class="summary">
+                    共 ${o.totalQuantity} 件，合计 <span class="amount">${Number(o.totalAmount).toFixed(2)}</span>
+                  </div>
+                  <div class="actions">${actions}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        })
+        .catch(() => showMsg('加载失败', 'error'));
+    }
+
+    loadOrders();
+  </script>
+</body>
+</html>
