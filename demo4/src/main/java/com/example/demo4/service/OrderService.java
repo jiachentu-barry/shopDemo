@@ -14,4 +14,6 @@ public interface OrderService {
     Order payOrder(String orderNo);
 
     Order cancelOrder(String orderNo, Long userId);
+
+    List<Order> getAllOrders();
 }

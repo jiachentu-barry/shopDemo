@@ -51,9 +51,54 @@ public class LoginController {
             result.put("loggedIn", true);
             result.put("username", user.getUsername());
             result.put("id", user.getId());
+            result.put("role", user.getRole() != null ? user.getRole() : "USER");
         } else {
             result.put("loggedIn", false);
         }
+        return result;
+    }
+
+    @GetMapping("/api/profile")
+    @ResponseBody
+    public Map<String, Object> getProfile(HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        Users user = (Users) session.getAttribute("loginUser");
+        if (user == null) {
+            result.put("success", false);
+            result.put("msg", "未登录");
+            return result;
+        }
+        result.put("success", true);
+        result.put("username", user.getUsername());
+        result.put("email", user.getEmail() != null ? user.getEmail() : "");
+        result.put("role", user.getRole() != null ? user.getRole() : "USER");
+        result.put("createTime", user.getCreateTime() != null ? user.getCreateTime().toString() : "");
+        return result;
+    }
+
+    @PostMapping("/api/updateProfile")
+    @ResponseBody
+    public Map<String, Object> updateProfile(@RequestParam String username,
+                                              @RequestParam String email,
+                                              HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        Users user = (Users) session.getAttribute("loginUser");
+        if (user == null) {
+            result.put("success", false);
+            result.put("msg", "未登录");
+            return result;
+        }
+        if (username == null || username.trim().isEmpty()) {
+            result.put("success", false);
+            result.put("msg", "用户名不能为空");
+            return result;
+        }
+        user.setUsername(username.trim());
+        user.setEmail(email != null ? email.trim() : "");
+        usersService.addUser(user);
+        session.setAttribute("loginUser", user);
+        result.put("success", true);
+        result.put("msg", "个人信息修改成功");
         return result;
     }
 

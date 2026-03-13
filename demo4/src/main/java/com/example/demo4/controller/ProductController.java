@@ -15,7 +15,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.demo4.entity.Product;
+import com.example.demo4.entity.Users;
 import com.example.demo4.service.ProductService;
+
+import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/api/product")
@@ -30,15 +33,27 @@ public class ProductController {
         this.productService = productService;
     }
 
+    private boolean isAdmin(HttpSession session) {
+        Users user = (Users) session.getAttribute("loginUser");
+        return user != null && "ADMIN".equals(user.getRole());
+    }
+
     @PostMapping("/upload")
     public Map<String, Object> uploadProduct(
             @RequestParam("name") String name,
             @RequestParam("price") BigDecimal price,
             @RequestParam("description") String description,
             @RequestParam("stock") Integer stock,
-            @RequestParam("image") MultipartFile image) {
+            @RequestParam("image") MultipartFile image,
+            HttpSession session) {
 
         Map<String, Object> result = new HashMap<>();
+
+        if (!isAdmin(session)) {
+            result.put("success", false);
+            result.put("message", "无权限操作");
+            return result;
+        }
 
         if (image.isEmpty()) {
             result.put("success", false);
@@ -105,9 +120,17 @@ public class ProductController {
             @RequestParam("price") BigDecimal price,
             @RequestParam("description") String description,
             @RequestParam("stock") Integer stock,
-            @RequestParam(value = "image", required = false) MultipartFile image) {
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            HttpSession session) {
 
         Map<String, Object> result = new HashMap<>();
+
+        if (!isAdmin(session)) {
+            result.put("success", false);
+            result.put("message", "无权限操作");
+            return result;
+        }
+
         Product product = productService.getProductById(id);
         if (product == null) {
             result.put("success", false);
@@ -155,8 +178,15 @@ public class ProductController {
     }
 
     @DeleteMapping("/delete/{id}")
-    public Map<String, Object> deleteProduct(@PathVariable Long id) {
+    public Map<String, Object> deleteProduct(@PathVariable Long id, HttpSession session) {
         Map<String, Object> result = new HashMap<>();
+
+        if (!isAdmin(session)) {
+            result.put("success", false);
+            result.put("message", "无权限操作");
+            return result;
+        }
+
         Product product = productService.getProductById(id);
         if (product == null) {
             result.put("success", false);

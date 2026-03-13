@@ -29,6 +29,7 @@ public class RegistrationController {
         user.setUsername(username);
         user.setPassword(password);
         user.setEmail(email);
+        user.setRole("USER");
         usersService.addUser(user);
         return "redirect:/register-success.html";
     }

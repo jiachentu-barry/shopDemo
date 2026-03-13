@@ -318,11 +318,10 @@
     <!-- 已登录 -->
     <div class="user-info" id="userNav" style="display:none;">
       <span class="username" id="displayName"></span>
-      <a href="/product-upload.html" class="btn-edit">商品上传</a>
-      <a href="/product-manage.html" class="btn-edit">商品管理</a>
+      <a href="/admin.html" class="btn-edit" id="adminLink" style="display:none;">后台管理</a>
       <a href="/cart.html" class="btn-edit">🛒 购物车</a>
       <a href="/orders.html" class="btn-edit">📦 我的订单</a>
-      <a href="/change-password.html" class="btn-edit">修改密码</a>
+      <a href="/change-password.html" class="btn-edit">👤 个人信息</a>
       <a href="/logout" class="btn-logout">退出</a>
     </div>
   </nav>
@@ -348,6 +347,9 @@
           document.getElementById('guestNav').style.display = 'none';
           document.getElementById('userNav').style.display = 'flex';
           document.getElementById('displayName').textContent = data.username;
+          if (data.role === 'ADMIN') {
+            document.getElementById('adminLink').style.display = '';
+          }
         }
       });
 

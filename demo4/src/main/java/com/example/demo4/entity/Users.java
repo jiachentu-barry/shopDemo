@@ -16,6 +16,9 @@ public class Users {
 
     private String email;
 
+    /** 角色: USER-普通用户, ADMIN-管理员 */
+    private String role;
+
     // 创建时间
     private LocalDateTime createTime;
 
@@ -57,6 +60,14 @@ public class Users {
 
     public void setCreateTime(LocalDateTime createTime) {
         this.createTime = createTime;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
 

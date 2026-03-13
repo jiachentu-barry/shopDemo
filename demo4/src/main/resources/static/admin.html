@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>后台管理</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+    }
+    .header {
+      background: #fff;
+      padding: 16px 32px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { font-size: 22px; color: #333; }
+    .header-links a {
+      color: #1890ff;
+      text-decoration: none;
+      font-size: 14px;
+      margin-left: 16px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    /* Tab 切换 */
+    .tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 20px;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 14px 24px;
+      border: none;
+      background: #fff;
+      font-size: 15px;
+      font-weight: 500;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.3s;
+      border-bottom: 3px solid transparent;
+    }
+    .tab-btn:hover { background: #fafafa; }
+    .tab-btn.active {
+      color: #1890ff;
+      border-bottom-color: #1890ff;
+      background: #e6f7ff;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* 商品列表 */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .toolbar .count { color: #666; font-size: 14px; }
+    table {
+      width: 100%;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 14px;
+    }
+    th {
+      background: #fafafa;
+      color: #666;
+      font-weight: 600;
+    }
+    td img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #eee;
+    }
+    .btn {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-edit { background: #1890ff; color: #fff; }
+    .btn-delete { background: #ff4d4f; color: #fff; margin-left: 8px; }
+    .btn-save { background: #52c41a; color: #fff; }
+    .btn-cancel { background: #d9d9d9; color: #333; margin-left: 8px; }
+    .actions { white-space: nowrap; }
+    .empty {
+      text-align: center;
+      padding: 60px 0;
+      color: #999;
+      font-size: 16px;
+    }
+
+    /* 上传区域 */
+    .upload-card {
+      background: #fff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    .upload-card h2 {
+      text-align: center;
+      margin-bottom: 28px;
+      color: #333;
+      font-size: 20px;
+    }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      color: #555;
+      font-size: 14px;
+    }
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #1890ff;
+      box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+    }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+      font-family: inherit;
+    }
+    .image-upload-area {
+      border: 2px dashed #d9d9d9;
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+    }
+    .image-upload-area:hover {
+      border-color: #1890ff;
+      background: #fafafa;
+    }
+    .image-upload-area.has-image {
+      padding: 10px;
+      border-color: #1890ff;
+    }
+    .image-upload-area input[type="file"] { display: none; }
+    .upload-icon { font-size: 36px; color: #bbb; margin-bottom: 8px; }
+    .upload-text { color: #999; font-size: 14px; }
+    .image-preview {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 6px;
+      display: none;
+    }
+    .remove-image {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: #ff4d4f;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      font-size: 14px;
+      cursor: pointer;
+      display: none;
+      line-height: 24px;
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 10px;
+      background: #1890ff;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 8px;
+    }
+    .btn-submit:hover { background: #40a9ff; }
+    .btn-submit:disabled { background: #d9d9d9; cursor: not-allowed; }
+
+    .upload-msg {
+      text-align: center;
+      margin-bottom: 16px;
+      font-size: 14px;
+      display: none;
+    }
+    .upload-msg.success { color: #52c41a; }
+    .upload-msg.error { color: #ff4d4f; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      padding: 32px;
+      width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+    .modal h2 {
+      margin-bottom: 24px;
+      font-size: 20px;
+      color: #333;
+    }
+    .current-image { margin-top: 8px; }
+    .current-image img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid #eee;
+    }
+    .current-image span {
+      display: block;
+      font-size: 12px;
+      color: #999;
+      margin-top: 4px;
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    /* Toast */
+    .msg {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 24px;
+      border-radius: 6px;
+      font-size: 14px;
+      z-index: 2000;
+      color: #fff;
+      transition: opacity 0.3s;
+    }
+    .msg-success { background: #52c41a; }
+    .msg-error { background: #ff4d4f; }
+
+    /* 订单相关 */
+    .order-card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      background: #fafafa;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+    }
+    .order-header:hover { background: #f5f5f5; }
+    .order-info { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+    .order-info span { font-size: 13px; color: #666; }
+    .order-info .order-no { font-weight: 600; color: #333; font-size: 14px; }
+    .order-info .order-user { color: #1890ff; }
+    .status-badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .status-PENDING { background: #fff7e6; color: #fa8c16; }
+    .status-PAID { background: #e6f7ff; color: #1890ff; }
+    .status-SHIPPED { background: #f6ffed; color: #52c41a; }
+    .status-COMPLETED { background: #f6ffed; color: #389e0d; }
+    .status-CANCELLED { background: #fff1f0; color: #ff4d4f; }
+    .order-items {
+      display: none;
+      padding: 16px 20px;
+    }
+    .order-items.open { display: block; }
+    .order-items table { box-shadow: none; }
+    .order-items td img {
+      width: 48px;
+      height: 48px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid #eee;
+    }
+    .order-summary {
+      padding: 10px 20px;
+      text-align: right;
+      font-size: 14px;
+      color: #333;
+      border-top: 1px solid #f0f0f0;
+      background: #fafafa;
+    }
+    .order-summary strong { color: #ff4d4f; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>后台管理</h1>
+    <div class="header-links">
+      <a href="/">返回主页</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Tab 导航 -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('list')">📋 商品列表</button>
+      <button class="tab-btn" onclick="switchTab('upload')">➕ 上传商品</button>
+      <button class="tab-btn" onclick="switchTab('orders')">📦 订单管理</button>
+    </div>
+
+    <!-- Tab 1: 商品列表 -->
+    <div class="tab-content active" id="tab-list">
+      <div class="toolbar">
+        <span class="count" id="productCount">加载中...</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>图片</th>
+            <th>商品名称</th>
+            <th>价格</th>
+            <th>库存</th>
+            <th>描述</th>
+            <th>创建时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="productTable">
+          <tr><td colspan="8" class="empty">加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tab 2: 上传商品 -->
+    <div class="tab-content" id="tab-upload">
+      <div class="upload-card">
+        <h2>上传新商品</h2>
+        <div class="upload-msg" id="uploadMsg"></div>
+        <form id="productForm">
+          <div class="form-group">
+            <label for="name">商品名称</label>
+            <input type="text" id="name" name="name" placeholder="请输入商品名称" required>
+          </div>
+          <div class="form-group">
+            <label for="price">价格 (元)</label>
+            <input type="number" id="price" name="price" placeholder="请输入价格" step="0.01" min="0" required>
+          </div>
+          <div class="form-group">
+            <label for="description">商品描述</label>
+            <textarea id="description" name="description" placeholder="请输入商品描述" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="stock">库存数量</label>
+            <input type="number" id="stock" name="stock" placeholder="请输入库存数量" min="0" value="10" required>
+          </div>
+          <div class="form-group">
+            <label>商品图片</label>
+            <div class="image-upload-area" id="dropZone">
+              <input type="file" id="imageInput" accept="image/*">
+              <div class="upload-icon" id="uploadIcon">&#128247;</div>
+              <div class="upload-text" id="uploadText">点击或拖拽图片到此处上传</div>
+              <img class="image-preview" id="imagePreview">
+              <button type="button" class="remove-image" id="removeBtn">&times;</button>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit" id="submitBtn">上传商品</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tab 3: 订单管理 -->
+    <div class="tab-content" id="tab-orders">
+      <div class="toolbar">
+        <span class="count" id="orderCount">加载中...</span>
+      </div>
+      <div id="orderList"></div>
+    </div>
+  </div>
+
+  <!-- 编辑弹窗 -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h2>编辑商品</h2>
+      <form id="editForm">
+        <input type="hidden" id="editId">
+        <div class="form-group">
+          <label>商品名称</label>
+          <input type="text" id="editName" required>
+        </div>
+        <div class="form-group">
+          <label>价格</label>
+          <input type="number" id="editPrice" step="0.01" min="0" required>
+        </div>
+        <div class="form-group">
+          <label>描述</label>
+          <textarea id="editDescription" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>库存数量</label>
+          <input type="number" id="editStock" min="0" required>
+        </div>
+        <div class="form-group">
+          <label>更换图片（可选）</label>
+          <input type="file" id="editImage" accept="image/*">
+          <div class="current-image" id="currentImageBox">
+            <span>当前图片：</span>
+            <img id="currentImage" src="" alt="当前图片">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-save">保存</button>
+          <button type="button" class="btn btn-cancel" onclick="closeModal()">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    /* ========== 权限检查 ========== */
+    fetch('/api/currentUser')
+      .then(r => r.json())
+      .then(data => {
+        if (!data.loggedIn || data.role !== 'ADMIN') {
+          alert('无权限访问后台管理页面');
+          window.location.href = '/';
+        }
+      })
+      .catch(() => { window.location.href = '/login.html'; });
+
+    /* ========== Tab 切换 ========== */
+    function switchTab(name) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      document.querySelector('.tab-btn[onclick*="' + name + '"]').classList.add('active');
+      if (name === 'list') loadProducts();
+      if (name === 'orders') loadOrders();
+    }
+
+    /* ========== Toast 消息 ========== */
+    function showMsg(text, type) {
+      const el = document.createElement('div');
+      el.className = 'msg msg-' + type;
+      el.textContent = text;
+      document.body.appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; }, 2000);
+      setTimeout(() => { el.remove(); }, 2500);
+    }
+
+    /* ========== 商品列表 ========== */
+    function loadProducts() {
+      fetch('/api/product/list')
+        .then(r => r.json())
+        .then(products => {
+          const tbody = document.getElementById('productTable');
+          const countEl = document.getElementById('productCount');
+          countEl.textContent = '共 ' + products.length + ' 件商品';
+
+          if (products.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无商品</td></tr>';
+            return;
+          }
+
+          tbody.innerHTML = products.map(p => `
+            <tr>
+              <td>${p.id}</td>
+              <td><img src="${p.imagePath}" alt="${escapeHtml(p.name)}"></td>
+              <td>${escapeHtml(p.name)}</td>
+              <td>¥${Number(p.price).toFixed(2)}</td>
+              <td>${p.stock != null ? p.stock : 0}</td>
+              <td title="${escapeHtml(p.description)}">${escapeHtml(truncate(p.description, 30))}</td>
+              <td>${formatTime(p.createTime)}</td>
+              <td class="actions">
+                <button class="btn btn-edit" onclick='openEdit(${JSON.stringify(p).replace(/'/g, "&#39;")})'>编辑</button>
+                <button class="btn btn-delete" onclick="deleteProduct(${p.id})">删除</button>
+              </td>
+            </tr>
+          `).join('');
+        })
+        .catch(() => {
+          document.getElementById('productTable').innerHTML =
+            '<tr><td colspan="8" class="empty">加载失败，请刷新重试</td></tr>';
+        });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function truncate(str, len) {
+      if (!str) return '';
+      return str.length > len ? str.substring(0, len) + '...' : str;
+    }
+
+    function formatTime(t) {
+      if (!t) return '-';
+      if (Array.isArray(t)) {
+        const [y, m, d, h, mi] = t;
+        return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')} ${String(h).padStart(2,'0')}:${String(mi).padStart(2,'0')}`;
+      }
+      return t.replace('T', ' ').substring(0, 16);
+    }
+
+    /* ========== 编辑商品 ========== */
+    function openEdit(product) {
+      document.getElementById('editId').value = product.id;
+      document.getElementById('editName').value = product.name;
+      document.getElementById('editPrice').value = product.price;
+      document.getElementById('editDescription').value = product.description || '';
+      document.getElementById('editStock').value = product.stock != null ? product.stock : 0;
+      document.getElementById('editImage').value = '';
+      if (product.imagePath) {
+        document.getElementById('currentImage').src = product.imagePath;
+        document.getElementById('currentImageBox').style.display = 'block';
+      } else {
+        document.getElementById('currentImageBox').style.display = 'none';
+      }
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('editModal').classList.remove('active');
+    }
+
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData();
+      formData.append('id', document.getElementById('editId').value);
+      formData.append('name', document.getElementById('editName').value);
+      formData.append('price', document.getElementById('editPrice').value);
+      formData.append('description', document.getElementById('editDescription').value);
+      formData.append('stock', document.getElementById('editStock').value);
+      const imageFile = document.getElementById('editImage').files[0];
+      if (imageFile) formData.append('image', imageFile);
+
+      fetch('/api/product/update', { method: 'PUT', body: formData })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            showMsg(data.message, 'success');
+            closeModal();
+            loadProducts();
+          } else {
+            showMsg(data.message, 'error');
+          }
+        })
+        .catch(() => showMsg('更新失败', 'error'));
+    });
+
+    /* ========== 删除商品 ========== */
+    function deleteProduct(id) {
+      if (!confirm('确定要删除该商品吗？此操作不可恢复。')) return;
+      fetch('/api/product/delete/' + id, { method: 'DELETE' })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            showMsg(data.message, 'success');
+            loadProducts();
+          } else {
+            showMsg(data.message, 'error');
+          }
+        })
+        .catch(() => showMsg('删除失败', 'error'));
+    }
+
+    document.getElementById('editModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    /* ========== 上传商品 ========== */
+    const dropZone = document.getElementById('dropZone');
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const uploadIcon = document.getElementById('uploadIcon');
+    const uploadText = document.getElementById('uploadText');
+    const removeBtn = document.getElementById('removeBtn');
+    const form = document.getElementById('productForm');
+    const uploadMsgEl = document.getElementById('uploadMsg');
+    const submitBtn = document.getElementById('submitBtn');
+
+    dropZone.addEventListener('click', function(e) {
+      if (e.target !== removeBtn) imageInput.click();
+    });
+
+    dropZone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      dropZone.style.borderColor = '#1890ff';
+      dropZone.style.background = '#e6f7ff';
+    });
+    dropZone.addEventListener('dragleave', function() {
+      dropZone.style.borderColor = '#d9d9d9';
+      dropZone.style.background = '';
+    });
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropZone.style.borderColor = '#d9d9d9';
+      dropZone.style.background = '';
+      const files = e.dataTransfer.files;
+      if (files.length > 0 && files[0].type.startsWith('image/')) {
+        imageInput.files = files;
+        showPreview(files[0]);
+      }
+    });
+
+    imageInput.addEventListener('change', function() {
+      if (this.files.length > 0) showPreview(this.files[0]);
+    });
+
+    function showPreview(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        imagePreview.src = e.target.result;
+        imagePreview.style.display = 'block';
+        uploadIcon.style.display = 'none';
+        uploadText.style.display = 'none';
+        removeBtn.style.display = 'block';
+        dropZone.classList.add('has-image');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    removeBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      imageInput.value = '';
+      imagePreview.style.display = 'none';
+      imagePreview.src = '';
+      uploadIcon.style.display = 'block';
+      uploadText.style.display = 'block';
+      removeBtn.style.display = 'none';
+      dropZone.classList.remove('has-image');
+    });
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      if (!imageInput.files.length) {
+        showUploadMsg('请选择商品图片', 'error');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '上传中...';
+
+      const formData = new FormData();
+      formData.append('name', document.getElementById('name').value);
+      formData.append('price', document.getElementById('price').value);
+      formData.append('description', document.getElementById('description').value);
+      formData.append('stock', document.getElementById('stock').value);
+      formData.append('image', imageInput.files[0]);
+
+      fetch('/api/product/upload', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            showUploadMsg(data.message, 'success');
+            form.reset();
+            removeBtn.click();
+          } else {
+            showUploadMsg(data.message, 'error');
+          }
+        })
+        .catch(() => showUploadMsg('网络错误，请重试', 'error'))
+        .finally(() => {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '上传商品';
+        });
+    });
+
+    function showUploadMsg(text, type) {
+      uploadMsgEl.textContent = text;
+      uploadMsgEl.className = 'upload-msg ' + type;
+      uploadMsgEl.style.display = 'block';
+      setTimeout(() => { uploadMsgEl.style.display = 'none'; }, 3000);
+    }
+
+    /* ========== 订单管理 ========== */
+    function loadOrders() {
+      fetch('/api/order/all')
+        .then(r => r.json())
+        .then(data => {
+          if (!data.success) {
+            document.getElementById('orderList').innerHTML = '<div class="empty">加载失败</div>';
+            return;
+          }
+          const orders = data.orders;
+          document.getElementById('orderCount').textContent = '共 ' + orders.length + ' 个订单';
+          if (orders.length === 0) {
+            document.getElementById('orderList').innerHTML = '<div class="empty">暂无订单</div>';
+            return;
+          }
+          document.getElementById('orderList').innerHTML = orders.map(o => `
+            <div class="order-card">
+              <div class="order-header" onclick="toggleOrderItems(this)">
+                <div class="order-info">
+                  <span class="order-no">${escapeHtml(o.orderNo)}</span>
+                  <span class="order-user">用户: ${escapeHtml(o.username)}</span>
+                  <span>数量: ${o.totalQuantity}</span>
+                  <span>金额: <strong style="color:#ff4d4f">¥${Number(o.totalAmount).toFixed(2)}</strong></span>
+                  <span>${formatTime(o.createTime)}</span>
+                </div>
+                <span class="status-badge status-${o.status}">${statusText(o.status)}</span>
+              </div>
+              <div class="order-items">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>图片</th>
+                      <th>商品名称</th>
+                      <th>单价</th>
+                      <th>数量</th>
+                      <th>小计</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${(o.items || []).map(item => `
+                      <tr>
+                        <td><img src="${item.productImage || ''}" alt=""></td>
+                        <td>${escapeHtml(item.productName)}</td>
+                        <td>¥${Number(item.price).toFixed(2)}</td>
+                        <td>${item.quantity}</td>
+                        <td>¥${Number(item.subtotal).toFixed(2)}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+              <div class="order-summary">
+                共 ${o.totalQuantity} 件商品，合计 <strong>¥${Number(o.totalAmount).toFixed(2)}</strong>
+                ${o.payTime ? '&nbsp;| 支付时间: ' + formatTime(o.payTime) : ''}
+              </div>
+            </div>
+          `).join('');
+        })
+        .catch(() => {
+          document.getElementById('orderList').innerHTML = '<div class="empty">加载失败，请刷新重试</div>';
+        });
+    }
+
+    function toggleOrderItems(header) {
+      const items = header.nextElementSibling;
+      items.classList.toggle('open');
+    }
+
+    function statusText(s) {
+      const m = { PENDING: '待付款', PAID: '已付款', SHIPPED: '已发货', COMPLETED: '已完成', CANCELLED: '已取消' };
+      return m[s] || s;
+    }
+
+    /* ========== 初始化 ========== */
+    loadProducts();
+  </script>
+</body>
+</html>

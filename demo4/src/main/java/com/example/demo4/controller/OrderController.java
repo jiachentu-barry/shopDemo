@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import com.example.demo4.entity.Order;
 import com.example.demo4.entity.Users;
 import com.example.demo4.service.OrderService;
+import com.example.demo4.service.UsersService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -17,9 +18,11 @@ import jakarta.servlet.http.HttpSession;
 public class OrderController {
 
     private final OrderService orderService;
+    private final UsersService usersService;
 
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, UsersService usersService) {
         this.orderService = orderService;
+        this.usersService = usersService;
     }
 
     private Users getLoginUser(HttpSession session) {
@@ -111,6 +114,38 @@ public class OrderController {
             result.put("success", false);
             result.put("message", e.getMessage());
         }
+        return result;
+    }
+
+    @GetMapping("/all")
+    public Map<String, Object> listAllOrders(HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        Users user = getLoginUser(session);
+        if (user == null || !"ADMIN".equals(user.getRole())) {
+            result.put("success", false);
+            result.put("message", "无权限操作");
+            return result;
+        }
+        List<Order> orders = orderService.getAllOrders();
+        // 附加用户名信息
+        List<Map<String, Object>> list = new java.util.ArrayList<>();
+        for (Order order : orders) {
+            Map<String, Object> o = new HashMap<>();
+            o.put("id", order.getId());
+            o.put("orderNo", order.getOrderNo());
+            o.put("userId", order.getUserId());
+            Users u = usersService.getUserById(order.getUserId());
+            o.put("username", u != null ? u.getUsername() : "未知用户");
+            o.put("totalAmount", order.getTotalAmount());
+            o.put("totalQuantity", order.getTotalQuantity());
+            o.put("status", order.getStatus());
+            o.put("createTime", order.getCreateTime());
+            o.put("payTime", order.getPayTime());
+            o.put("items", order.getItems());
+            list.add(o);
+        }
+        result.put("success", true);
+        result.put("orders", list);
         return result;
     }
 
