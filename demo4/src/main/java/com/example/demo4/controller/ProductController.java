@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -196,6 +197,51 @@ public class ProductController {
         productService.deleteProduct(id);
         result.put("success", true);
         result.put("message", "商品删除成功");
+        return result;
+    }
+
+    // 批量删除商品
+    @DeleteMapping("/batchDelete")
+    public Map<String, Object> batchDelete(@RequestBody Map<String, List<Long>> body, HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        if (!isAdmin(session)) {
+            result.put("success", false);
+            result.put("message", "无权限操作");
+            return result;
+        }
+        List<Long> ids = body.get("ids");
+        if (ids == null || ids.isEmpty()) {
+            result.put("success", false);
+            result.put("message", "请选择要删除的商品");
+            return result;
+        }
+        productService.batchDelete(ids);
+        result.put("success", true);
+        result.put("message", "成功删除 " + ids.size() + " 件商品");
+        return result;
+    }
+
+    // 批量更新库存
+    @PutMapping("/batchUpdateStock")
+    public Map<String, Object> batchUpdateStock(@RequestBody List<Map<String, Object>> items, HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        if (!isAdmin(session)) {
+            result.put("success", false);
+            result.put("message", "无权限操作");
+            return result;
+        }
+        if (items == null || items.isEmpty()) {
+            result.put("success", false);
+            result.put("message", "请提供要更新的商品库存信息");
+            return result;
+        }
+        Map<Long, Integer> stockMap = items.stream().collect(Collectors.toMap(
+                item -> Long.valueOf(item.get("id").toString()),
+                item -> Integer.valueOf(item.get("stock").toString())
+        ));
+        productService.batchUpdateStock(stockMap);
+        result.put("success", true);
+        result.put("message", "成功更新 " + stockMap.size() + " 件商品库存");
         return result;
     }
 }

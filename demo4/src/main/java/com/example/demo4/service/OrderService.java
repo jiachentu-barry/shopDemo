@@ -2,6 +2,7 @@ package com.example.demo4.service;
 
 import java.util.List;
 
+import com.example.demo4.entity.ExpiredOrderReport;
 import com.example.demo4.entity.Order;
 
 public interface OrderService {
@@ -16,4 +17,10 @@ public interface OrderService {
     Order cancelOrder(String orderNo, Long userId);
 
     List<Order> getAllOrders();
+
+    int autoCancelExpiredOrders();
+
+    ExpiredOrderReport generateDailyExpiredReport();
+
+    List<ExpiredOrderReport> getAllExpiredReports();
 }

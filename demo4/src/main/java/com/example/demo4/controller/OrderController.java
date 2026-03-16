@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.web.bind.annotation.*;
 
+import com.example.demo4.entity.ExpiredOrderReport;
 import com.example.demo4.entity.Order;
 import com.example.demo4.entity.Users;
 import com.example.demo4.service.OrderService;
@@ -166,6 +167,38 @@ public class OrderController {
             result.put("success", false);
             result.put("message", e.getMessage());
         }
+        return result;
+    }
+
+    // 查询超时未支付订单报表
+    @GetMapping("/expiredReports")
+    public Map<String, Object> getExpiredReports(HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        Users user = getLoginUser(session);
+        if (user == null || !"ADMIN".equals(user.getRole())) {
+            result.put("success", false);
+            result.put("message", "无权限操作");
+            return result;
+        }
+        result.put("success", true);
+        result.put("reports", orderService.getAllExpiredReports());
+        return result;
+    }
+
+    // 手动生成今日报表（统计昨天的数据）
+    @PostMapping("/generateReport")
+    public Map<String, Object> generateReport(HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        Users user = getLoginUser(session);
+        if (user == null || !"ADMIN".equals(user.getRole())) {
+            result.put("success", false);
+            result.put("message", "无权限操作");
+            return result;
+        }
+        ExpiredOrderReport report = orderService.generateDailyExpiredReport();
+        result.put("success", true);
+        result.put("message", "报表生成成功");
+        result.put("report", report);
         return result;
     }
 }

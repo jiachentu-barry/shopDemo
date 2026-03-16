@@ -1,5 +1,6 @@
 package com.example.demo4.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,4 +14,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findByOrderNo(String orderNo);
 
     List<Order> findAllByOrderByCreateTimeDesc();
+
+    List<Order> findByStatusAndCreateTimeBefore(String status, LocalDateTime time);
+
+    List<Order> findByStatusAndCreateTimeBetween(String status, LocalDateTime start, LocalDateTime end);
 }

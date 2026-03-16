@@ -1,8 +1,10 @@
 package com.example.demo4.service.impl;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo4.entity.Product;
 import com.example.demo4.repository.ProductRepository;
@@ -39,5 +41,21 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void deleteProduct(Long id) {
         productRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public void batchDelete(List<Long> ids) {
+        productRepository.deleteAllByIdInBatch(ids);
+    }
+
+    @Override
+    @Transactional
+    public void batchUpdateStock(Map<Long, Integer> stockMap) {
+        List<Product> products = productRepository.findAllById(stockMap.keySet());
+        for (Product product : products) {
+            product.setStock(stockMap.get(product.getId()));
+        }
+        productRepository.saveAll(products);
     }
 }

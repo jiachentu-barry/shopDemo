@@ -1,12 +1,14 @@
 package com.example.demo4.service.impl;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,13 +23,16 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
+    private final ExpiredOrderReportRepository reportRepository;
 
     public OrderServiceImpl(OrderRepository orderRepository,
                             CartItemRepository cartItemRepository,
-                            ProductRepository productRepository) {
+                            ProductRepository productRepository,
+                            ExpiredOrderReportRepository reportRepository) {
         this.orderRepository = orderRepository;
         this.cartItemRepository = cartItemRepository;
         this.productRepository = productRepository;
+        this.reportRepository = reportRepository;
     }
 
     @Override
@@ -146,5 +151,62 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<Order> getAllOrders() {
         return orderRepository.findAllByOrderByCreateTimeDesc();
+    }
+
+    @Override
+    @Transactional
+    public int autoCancelExpiredOrders() {
+        LocalDateTime expireTime = LocalDateTime.now().minusMinutes(30);
+        List<Order> expiredOrders = orderRepository.findByStatusAndCreateTimeBefore("PENDING", expireTime);
+
+        for (Order order : expiredOrders) {
+            order.setStatus("CANCELLED");
+            // 恢复库存
+            if (order.getItems() != null) {
+                for (OrderItem oi : order.getItems()) {
+                    Product product = productRepository.findById(oi.getProductId()).orElse(null);
+                    if (product != null) {
+                        product.setStock((product.getStock() != null ? product.getStock() : 0) + oi.getQuantity());
+                        productRepository.save(product);
+                    }
+                }
+            }
+            orderRepository.save(order);
+        }
+        return expiredOrders.size();
+    }
+
+    @Override
+    @Transactional
+    public ExpiredOrderReport generateDailyExpiredReport() {
+        LocalDate yesterday = LocalDate.now().minusDays(1);
+        // 避免重复生成
+        Optional<ExpiredOrderReport> existing = reportRepository.findByReportDate(yesterday);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+
+        LocalDateTime start = yesterday.atStartOfDay();
+        LocalDateTime end = yesterday.plusDays(1).atStartOfDay();
+        List<Order> cancelled = orderRepository.findByStatusAndCreateTimeBetween("CANCELLED", start, end);
+
+        BigDecimal total = cancelled.stream()
+                .map(Order::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        String orderNos = cancelled.stream()
+                .map(Order::getOrderNo)
+                .collect(Collectors.joining(","));
+
+        ExpiredOrderReport report = new ExpiredOrderReport();
+        report.setReportDate(yesterday);
+        report.setCancelledCount(cancelled.size());
+        report.setTotalAmount(total);
+        report.setOrderNos(orderNos.length() > 2000 ? orderNos.substring(0, 2000) : orderNos);
+        return reportRepository.save(report);
+    }
+
+    @Override
+    public List<ExpiredOrderReport> getAllExpiredReports() {
+        return reportRepository.findAllByOrderByReportDateDesc();
     }
 }

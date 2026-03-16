@@ -76,6 +76,8 @@
     .btn-delete { background: #ff4d4f; color: #fff; margin-left: 8px; }
     .btn-save { background: #52c41a; color: #fff; }
     .btn-cancel { background: #d9d9d9; color: #333; margin-left: 8px; }
+    .btn-batch-delete { background: #ff4d4f; color: #fff; margin-right: 8px; }
+    .btn-batch-stock { background: #faad14; color: #fff; }
     .actions { white-space: nowrap; }
     .empty {
       text-align: center;
@@ -179,10 +181,15 @@
   <div class="container">
     <div class="toolbar">
       <span class="count" id="productCount">加载中...</span>
+      <div>
+        <button class="btn btn-batch-delete" id="batchDeleteBtn" onclick="batchDelete()">批量删除</button>
+        <button class="btn btn-batch-stock" id="batchStockBtn" onclick="openBatchStock()">批量更新库存</button>
+      </div>
     </div>
     <table>
       <thead>
         <tr>
+          <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
           <th>ID</th>
           <th>图片</th>
           <th>商品名称</th>
@@ -194,7 +201,7 @@
         </tr>
       </thead>
       <tbody id="productTable">
-        <tr><td colspan="8" class="empty">加载中...</td></tr>
+        <tr><td colspan="9" class="empty">加载中...</td></tr>
       </tbody>
     </table>
   </div>
@@ -256,12 +263,13 @@
           countEl.textContent = '共 ' + products.length + ' 件商品';
 
           if (products.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无商品</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="empty">暂无商品</td></tr>';
             return;
           }
 
           tbody.innerHTML = products.map(p => `
             <tr>
+              <td><input type="checkbox" class="product-check" value="${p.id}" data-name="${escapeHtml(p.name)}" data-stock="${p.stock != null ? p.stock : 0}"></td>
               <td>${p.id}</td>
               <td><img src="${p.imagePath}" alt="${escapeHtml(p.name)}"></td>
               <td>${escapeHtml(p.name)}</td>
@@ -278,7 +286,7 @@
         })
         .catch(() => {
           document.getElementById('productTable').innerHTML =
-            '<tr><td colspan="8" class="empty">加载失败，请刷新重试</td></tr>';
+            '<tr><td colspan="9" class="empty">加载失败，请刷新重试</td></tr>';
         });
     }
 
@@ -372,6 +380,72 @@
     document.getElementById('editModal').addEventListener('click', function(e) {
       if (e.target === this) closeModal();
     });
+    document.getElementById('stockModal').addEventListener('click', function(e) {
+      if (e.target === this) closeStockModal();
+    });
+
+    // 全选/取消全选
+    function toggleSelectAll(el) {
+      document.querySelectorAll('.product-check').forEach(cb => cb.checked = el.checked);
+    }
+
+    function getSelectedIds() {
+      return Array.from(document.querySelectorAll('.product-check:checked')).map(cb => Number(cb.value));
+    }
+
+    // 批量删除
+    function batchDelete() {
+      const ids = getSelectedIds();
+      if (ids.length === 0) { showMsg('请先勾选要删除的商品', 'error'); return; }
+      if (!confirm('确定要删除选中的 ' + ids.length + ' 件商品吗？此操作不可恢复。')) return;
+      fetch('/api/product/batchDelete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: ids })
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) { showMsg(data.message, 'success'); loadProducts(); }
+          else { showMsg(data.message, 'error'); }
+        })
+        .catch(() => showMsg('批量删除失败', 'error'));
+    }
+
+    // 批量更新库存
+    function openBatchStock() {
+      const checked = document.querySelectorAll('.product-check:checked');
+      if (checked.length === 0) { showMsg('请先勾选要更新库存的商品', 'error'); return; }
+      const listEl = document.getElementById('stockList');
+      listEl.innerHTML = Array.from(checked).map(cb => `
+        <div class="form-group" style="display:flex;align-items:center;gap:12px;">
+          <label style="min-width:120px;margin:0;">${cb.dataset.name}</label>
+          <input type="number" min="0" class="stock-input" data-id="${cb.value}" value="${cb.dataset.stock}" style="width:100px;">
+        </div>
+      `).join('');
+      document.getElementById('stockModal').classList.add('active');
+    }
+
+    function closeStockModal() {
+      document.getElementById('stockModal').classList.remove('active');
+    }
+
+    function submitBatchStock() {
+      const items = Array.from(document.querySelectorAll('.stock-input')).map(input => ({
+        id: Number(input.dataset.id),
+        stock: Number(input.value)
+      }));
+      fetch('/api/product/batchUpdateStock', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(items)
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) { showMsg(data.message, 'success'); closeStockModal(); loadProducts(); }
+          else { showMsg(data.message, 'error'); }
+        })
+        .catch(() => showMsg('批量更新失败', 'error'));
+    }
 
     loadProducts();
   </script>

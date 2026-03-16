@@ -110,6 +110,8 @@
     .btn-delete { background: #ff4d4f; color: #fff; margin-left: 8px; }
     .btn-save { background: #52c41a; color: #fff; }
     .btn-cancel { background: #d9d9d9; color: #333; margin-left: 8px; }
+    .btn-batch-delete { background: #ff4d4f; color: #fff; margin-right: 8px; }
+    .btn-batch-stock { background: #faad14; color: #fff; }
     .actions { white-space: nowrap; }
     .empty {
       text-align: center;
@@ -361,16 +363,22 @@
       <button class="tab-btn active" onclick="switchTab('list')">📋 商品列表</button>
       <button class="tab-btn" onclick="switchTab('upload')">➕ 上传商品</button>
       <button class="tab-btn" onclick="switchTab('orders')">📦 订单管理</button>
+      <button class="tab-btn" onclick="switchTab('report')">📊 超时报表</button>
     </div>
 
     <!-- Tab 1: 商品列表 -->
     <div class="tab-content active" id="tab-list">
       <div class="toolbar">
         <span class="count" id="productCount">加载中...</span>
+        <div>
+          <button class="btn btn-batch-delete" onclick="batchDelete()">批量删除</button>
+          <button class="btn btn-batch-stock" onclick="openBatchStock()">批量更新库存</button>
+        </div>
       </div>
       <table>
         <thead>
           <tr>
+            <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
             <th>ID</th>
             <th>图片</th>
             <th>商品名称</th>
@@ -382,7 +390,7 @@
           </tr>
         </thead>
         <tbody id="productTable">
-          <tr><td colspan="8" class="empty">加载中...</td></tr>
+          <tr><td colspan="9" class="empty">加载中...</td></tr>
         </tbody>
       </table>
     </div>
@@ -430,6 +438,40 @@
         <span class="count" id="orderCount">加载中...</span>
       </div>
       <div id="orderList"></div>
+    </div>
+
+    <!-- Tab 4: 超时未支付订单报表 -->
+    <div class="tab-content" id="tab-report">
+      <div class="toolbar">
+        <span class="count" id="reportCount">加载中...</span>
+        <button class="btn btn-edit" onclick="generateReport()">手动生成今日报表</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>报表日期</th>
+            <th>取消订单数</th>
+            <th>涉及金额</th>
+            <th>订单号</th>
+            <th>生成时间</th>
+          </tr>
+        </thead>
+        <tbody id="reportTable">
+          <tr><td colspan="5" class="empty">加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 批量更新库存弹窗 -->
+  <div class="modal-overlay" id="stockModal">
+    <div class="modal">
+      <h2>批量更新库存</h2>
+      <div id="stockList" style="max-height:400px;overflow-y:auto;"></div>
+      <div class="modal-footer">
+        <button class="btn btn-save" onclick="submitBatchStock()">保存</button>
+        <button class="btn btn-cancel" onclick="closeStockModal()">取消</button>
+      </div>
     </div>
   </div>
 
@@ -491,6 +533,7 @@
       document.querySelector('.tab-btn[onclick*="' + name + '"]').classList.add('active');
       if (name === 'list') loadProducts();
       if (name === 'orders') loadOrders();
+      if (name === 'report') loadReports();
     }
 
     /* ========== Toast 消息 ========== */
@@ -513,12 +556,14 @@
           countEl.textContent = '共 ' + products.length + ' 件商品';
 
           if (products.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无商品</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="empty">暂无商品</td></tr>';
             return;
           }
+          document.getElementById('selectAll').checked = false;
 
           tbody.innerHTML = products.map(p => `
             <tr>
+              <td><input type="checkbox" class="product-check" value="${p.id}" data-name="${escapeHtml(p.name)}" data-stock="${p.stock != null ? p.stock : 0}"></td>
               <td>${p.id}</td>
               <td><img src="${p.imagePath}" alt="${escapeHtml(p.name)}"></td>
               <td>${escapeHtml(p.name)}</td>
@@ -535,7 +580,7 @@
         })
         .catch(() => {
           document.getElementById('productTable').innerHTML =
-            '<tr><td colspan="8" class="empty">加载失败，请刷新重试</td></tr>';
+            '<tr><td colspan="9" class="empty">加载失败，请刷新重试</td></tr>';
         });
     }
 
@@ -625,6 +670,70 @@
     document.getElementById('editModal').addEventListener('click', function(e) {
       if (e.target === this) closeModal();
     });
+    document.getElementById('stockModal').addEventListener('click', function(e) {
+      if (e.target === this) closeStockModal();
+    });
+
+    /* ========== 全选/批量操作 ========== */
+    function toggleSelectAll(el) {
+      document.querySelectorAll('.product-check').forEach(cb => cb.checked = el.checked);
+    }
+
+    function getSelectedIds() {
+      return Array.from(document.querySelectorAll('.product-check:checked')).map(cb => Number(cb.value));
+    }
+
+    function batchDelete() {
+      const ids = getSelectedIds();
+      if (ids.length === 0) { showMsg('请先勾选要删除的商品', 'error'); return; }
+      if (!confirm('确定要删除选中的 ' + ids.length + ' 件商品吗？此操作不可恢复。')) return;
+      fetch('/api/product/batchDelete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: ids })
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) { showMsg(data.message, 'success'); loadProducts(); }
+          else { showMsg(data.message, 'error'); }
+        })
+        .catch(() => showMsg('批量删除失败', 'error'));
+    }
+
+    function openBatchStock() {
+      const checked = document.querySelectorAll('.product-check:checked');
+      if (checked.length === 0) { showMsg('请先勾选要更新库存的商品', 'error'); return; }
+      const listEl = document.getElementById('stockList');
+      listEl.innerHTML = Array.from(checked).map(cb => `
+        <div class="form-group" style="display:flex;align-items:center;gap:12px;">
+          <label style="min-width:120px;margin:0;">${cb.dataset.name}</label>
+          <input type="number" min="0" class="stock-input" data-id="${cb.value}" value="${cb.dataset.stock}" style="width:100px;">
+        </div>
+      `).join('');
+      document.getElementById('stockModal').classList.add('active');
+    }
+
+    function closeStockModal() {
+      document.getElementById('stockModal').classList.remove('active');
+    }
+
+    function submitBatchStock() {
+      const items = Array.from(document.querySelectorAll('.stock-input')).map(input => ({
+        id: Number(input.dataset.id),
+        stock: Number(input.value)
+      }));
+      fetch('/api/product/batchUpdateStock', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(items)
+      })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) { showMsg(data.message, 'success'); closeStockModal(); loadProducts(); }
+          else { showMsg(data.message, 'error'); }
+        })
+        .catch(() => showMsg('批量更新失败', 'error'));
+    }
 
     /* ========== 上传商品 ========== */
     const dropZone = document.getElementById('dropZone');
@@ -807,6 +916,65 @@
 
     /* ========== 初始化 ========== */
     loadProducts();
+
+    /* ========== 超时报表 ========== */
+    function loadReports() {
+      fetch('/api/order/expiredReports')
+        .then(r => r.json())
+        .then(data => {
+          const tbody = document.getElementById('reportTable');
+          const countEl = document.getElementById('reportCount');
+          if (!data.success) {
+            tbody.innerHTML = '<tr><td colspan="5" class="empty">加载失败</td></tr>';
+            return;
+          }
+          const reports = data.reports || [];
+          countEl.textContent = '共 ' + reports.length + ' 条报表记录';
+          if (reports.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="empty">暂无报表数据</td></tr>';
+            return;
+          }
+          tbody.innerHTML = reports.map(r => {
+            const nos = r.orderNos ? r.orderNos.split(',').slice(0, 5).join(', ') : '-';
+            const more = r.orderNos && r.orderNos.split(',').length > 5 ? ' 等' + r.orderNos.split(',').length + '个' : '';
+            return `
+              <tr>
+                <td>${formatDate(r.reportDate)}</td>
+                <td>${r.cancelledCount}</td>
+                <td style="color:#ff4d4f;font-weight:600">¥${Number(r.totalAmount).toFixed(2)}</td>
+                <td title="${escapeHtml(r.orderNos)}" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(nos + more)}</td>
+                <td>${formatTime(r.createTime)}</td>
+              </tr>
+            `;
+          }).join('');
+        })
+        .catch(() => {
+          document.getElementById('reportTable').innerHTML = '<tr><td colspan="5" class="empty">加载失败</td></tr>';
+        });
+    }
+
+    function formatDate(d) {
+      if (!d) return '-';
+      if (Array.isArray(d)) {
+        const [y, m, day] = d;
+        return y + '-' + String(m).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+      }
+      return String(d).substring(0, 10);
+    }
+
+    function generateReport() {
+      fetch('/api/order/generateReport', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) {
+            showMsg(data.message, 'success');
+            loadReports();
+          } else {
+            showMsg(data.message, 'error');
+          }
+        })
+        .catch(() => showMsg('生成失败', 'error'));
+    }
   </script>
 </body>
 </html>
