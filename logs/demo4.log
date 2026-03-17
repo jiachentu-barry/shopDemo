@@ -1,0 +1,59 @@
+2026-03-17T09:27:54.617+09:00  INFO 33416 --- [demo4] [main] com.example.demo4.Demo4Application       : Starting Demo4Application using Java 17.0.18 with PID 33416 (C:\Users\61413\Downloads\demo4\demo4\target\classes started by 61413 in C:\Users\61413\Downloads\demo4)
+2026-03-17T09:27:54.628+09:00  INFO 33416 --- [demo4] [main] com.example.demo4.Demo4Application       : No active profile set, falling back to 1 default profile: "default"
+2026-03-17T09:27:55.396+09:00  INFO 33416 --- [demo4] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-17T09:27:55.481+09:00  INFO 33416 --- [demo4] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 78 ms. Found 6 JPA repository interfaces.
+2026-03-17T09:27:56.244+09:00  INFO 33416 --- [demo4] [main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+2026-03-17T09:27:56.261+09:00  INFO 33416 --- [demo4] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-03-17T09:27:56.277+09:00  INFO 33416 --- [demo4] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.18]
+2026-03-17T09:27:56.359+09:00  INFO 33416 --- [demo4] [main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1680 ms
+2026-03-17T09:27:56.597+09:00  INFO 33416 --- [demo4] [main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-03-17T09:27:56.679+09:00  INFO 33416 --- [demo4] [main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.4.Final
+2026-03-17T09:27:57.428+09:00  INFO 33416 --- [demo4] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-17T09:27:57.466+09:00  INFO 33416 --- [demo4] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-03-17T09:27:57.681+09:00  INFO 33416 --- [demo4] [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4ef31221
+2026-03-17T09:27:57.681+09:00  INFO 33416 --- [demo4] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-03-17T09:27:57.778+09:00  INFO 33416 --- [demo4] [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/demo1?useSSL=false&serverTimezone=Asia/Tokyo]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.44
+	Default catalog/schema: demo1/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-03-17T09:27:59.460+09:00  INFO 3004 --- [demo4] [main] com.example.demo4.Demo4Application       : Starting Demo4Application using Java 17.0.18 with PID 3004 (C:\Users\61413\Downloads\demo4\demo4\target\classes started by 61413 in C:\Users\61413\Downloads\demo4)
+2026-03-17T09:27:59.467+09:00  INFO 3004 --- [demo4] [main] com.example.demo4.Demo4Application       : No active profile set, falling back to 1 default profile: "default"
+2026-03-17T09:28:00.243+09:00  INFO 3004 --- [demo4] [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-03-17T09:28:00.344+09:00  INFO 3004 --- [demo4] [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 78 ms. Found 6 JPA repository interfaces.
+2026-03-17T09:28:00.992+09:00  INFO 3004 --- [demo4] [main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+2026-03-17T09:28:01.025+09:00  INFO 3004 --- [demo4] [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-03-17T09:28:01.026+09:00  INFO 3004 --- [demo4] [main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.18]
+2026-03-17T09:28:01.101+09:00  INFO 3004 --- [demo4] [main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1578 ms
+2026-03-17T09:28:01.348+09:00  INFO 3004 --- [demo4] [main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-03-17T09:28:01.419+09:00  INFO 3004 --- [demo4] [main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.4.Final
+2026-03-17T09:28:02.022+09:00  INFO 3004 --- [demo4] [main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-03-17T09:28:02.080+09:00  INFO 3004 --- [demo4] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-03-17T09:28:02.277+09:00  INFO 3004 --- [demo4] [main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@dde6f87
+2026-03-17T09:28:02.277+09:00  INFO 3004 --- [demo4] [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-03-17T09:28:02.369+09:00  INFO 3004 --- [demo4] [main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/demo1?useSSL=false&serverTimezone=Asia/Tokyo]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.44
+	Default catalog/schema: demo1/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-03-17T09:28:03.275+09:00  INFO 3004 --- [demo4] [main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-03-17T09:28:03.361+09:00  INFO 3004 --- [demo4] [main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-03-17T09:28:03.457+09:00  INFO 3004 --- [demo4] [main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-03-17T09:28:03.814+09:00  WARN 3004 --- [demo4] [main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-03-17T09:28:03.835+09:00  INFO 3004 --- [demo4] [main] o.s.b.w.a.WelcomePageHandlerMapping      : Adding welcome page: class path resource [static/index.html]
+2026-03-17T09:28:04.221+09:00  INFO 3004 --- [demo4] [main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+2026-03-17T09:28:04.241+09:00  INFO 3004 --- [demo4] [main] com.example.demo4.Demo4Application       : Started Demo4Application in 5.347 seconds (process running for 5.78)

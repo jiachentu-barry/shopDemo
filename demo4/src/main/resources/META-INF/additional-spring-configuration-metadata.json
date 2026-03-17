@@ -1,0 +1,16 @@
+{
+  "properties": [
+    {
+      "name": "file.upload-dir",
+      "type": "java.lang.String",
+      "description": "Directory for uploaded product files.",
+      "defaultValue": "uploads"
+    },
+    {
+      "name": "report.export-dir",
+      "type": "java.lang.String",
+      "description": "Directory for exported expired-order report CSV files.",
+      "defaultValue": "reports"
+    }
+  ]
+}
