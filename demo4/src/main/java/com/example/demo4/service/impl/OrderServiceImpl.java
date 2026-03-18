@@ -180,14 +180,24 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public ExpiredOrderReport generateDailyExpiredReport() {
         LocalDate yesterday = LocalDate.now().minusDays(1);
+        return generateExpiredReportByDate(yesterday);
+    }
+
+    @Override
+    @Transactional
+    public ExpiredOrderReport generateExpiredReportByDate(LocalDate reportDate) {
+        if (reportDate == null) {
+            throw new RuntimeException("报表日期不能为空");
+        }
+
         // 避免重复生成
-        Optional<ExpiredOrderReport> existing = reportRepository.findByReportDate(yesterday);
+        Optional<ExpiredOrderReport> existing = reportRepository.findByReportDate(reportDate);
         if (existing.isPresent()) {
             return existing.get();
         }
 
-        LocalDateTime start = yesterday.atStartOfDay();
-        LocalDateTime end = yesterday.plusDays(1).atStartOfDay();
+        LocalDateTime start = reportDate.atStartOfDay();
+        LocalDateTime end = reportDate.plusDays(1).atStartOfDay();
         List<Order> cancelled = orderRepository.findByStatusAndCreateTimeBetween("CANCELLED", start, end);
 
         BigDecimal total = cancelled.stream()
@@ -198,7 +208,7 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.joining(","));
 
         ExpiredOrderReport report = new ExpiredOrderReport();
-        report.setReportDate(yesterday);
+        report.setReportDate(reportDate);
         report.setCancelledCount(cancelled.size());
         report.setTotalAmount(total);
         report.setOrderNos(orderNos.length() > 2000 ? orderNos.substring(0, 2000) : orderNos);

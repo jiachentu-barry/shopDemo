@@ -1,5 +1,6 @@
 package com.example.demo4.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import com.example.demo4.entity.ExpiredOrderReport;
@@ -21,6 +22,8 @@ public interface OrderService {
     int autoCancelExpiredOrders();
 
     ExpiredOrderReport generateDailyExpiredReport();
+
+    ExpiredOrderReport generateExpiredReportByDate(LocalDate reportDate);
 
     List<ExpiredOrderReport> getAllExpiredReports();
 }

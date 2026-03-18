@@ -112,6 +112,7 @@
     .btn-cancel { background: #d9d9d9; color: #333; margin-left: 8px; }
     .btn-batch-delete { background: #ff4d4f; color: #fff; margin-right: 8px; }
     .btn-batch-stock { background: #faad14; color: #fff; }
+    .btn-export { background: #13c2c2; color: #fff; margin-left: 8px; }
     .actions { white-space: nowrap; }
     .empty {
       text-align: center;
@@ -444,7 +445,10 @@
     <div class="tab-content" id="tab-report">
       <div class="toolbar">
         <span class="count" id="reportCount">加载中...</span>
-        <button class="btn btn-edit" onclick="generateReport()">手动生成今日报表</button>
+        <div>
+          <button class="btn btn-edit" onclick="generateReport()">手动生成昨日报表</button>
+          <button class="btn btn-export" onclick="exportTodayCsv()">导出今日CSV</button>
+        </div>
       </div>
       <table>
         <thead>
@@ -974,6 +978,15 @@
           }
         })
         .catch(() => showMsg('生成失败', 'error'));
+    }
+
+    function exportTodayCsv() {
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      const date = yyyy + '-' + mm + '-' + dd;
+      window.open('/api/order/exportCsv?date=' + encodeURIComponent(date), '_blank');
     }
   </script>
 </body>

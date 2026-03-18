@@ -2,6 +2,7 @@ package com.example.demo4.task;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,13 +47,27 @@ public class OrderTask {
      */
     @Scheduled(cron = "0 0 1 * * ?")
     public void generateDailyReport() {
-        var report = orderService.generateDailyExpiredReport();
-        exportReportCsv(report);
+        var report = generateAndExportReportByDate(LocalDate.now().minusDays(1));
         log.info("定时任务：生成 {} 日报表，取消订单 {} 个，总金额 {}",
                 report.getReportDate(), report.getCancelledCount(), report.getTotalAmount());
     }
 
-    private void exportReportCsv(ExpiredOrderReport report) {
+    public ExpiredOrderReport generateTodayReportNow() {
+        return generateAndExportReportByDate(LocalDate.now());
+    }
+
+    public ExpiredOrderReport generateAndExportReportByDate(LocalDate reportDate) {
+        ExpiredOrderReport report = orderService.generateExpiredReportByDate(reportDate);
+        exportReportCsv(report);
+        return report;
+    }
+
+    public Path generateAndExportReportCsvByDate(LocalDate reportDate) {
+        ExpiredOrderReport report = orderService.generateExpiredReportByDate(reportDate);
+        return exportReportCsv(report);
+    }
+
+    private Path exportReportCsv(ExpiredOrderReport report) {
         try {
             Path exportDir = Paths.get(reportExportDir);
             Files.createDirectories(exportDir);
@@ -70,8 +85,10 @@ public class OrderTask {
 
             Files.writeString(csvPath, content.toString(), StandardCharsets.UTF_8);
             log.info("定时任务：超时报表CSV已导出 -> {}", csvPath.toAbsolutePath());
+            return csvPath;
         } catch (IOException e) {
             log.error("定时任务：导出超时报表CSV失败", e);
+            throw new RuntimeException("导出超时报表CSV失败", e);
         }
     }
 

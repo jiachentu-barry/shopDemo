@@ -1,9 +1,17 @@
 package com.example.demo4.controller;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.demo4.entity.ExpiredOrderReport;
@@ -11,6 +19,7 @@ import com.example.demo4.entity.Order;
 import com.example.demo4.entity.Users;
 import com.example.demo4.service.OrderService;
 import com.example.demo4.service.UsersService;
+import com.example.demo4.task.OrderTask;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -20,10 +29,12 @@ public class OrderController {
 
     private final OrderService orderService;
     private final UsersService usersService;
+    private final OrderTask orderTask;
 
-    public OrderController(OrderService orderService, UsersService usersService) {
+    public OrderController(OrderService orderService, UsersService usersService, OrderTask orderTask) {
         this.orderService = orderService;
         this.usersService = usersService;
+        this.orderTask = orderTask;
     }
 
     private Users getLoginUser(HttpSession session) {
@@ -200,5 +211,65 @@ public class OrderController {
         result.put("message", "报表生成成功");
         result.put("report", report);
         return result;
+    }
+
+    // 立即生成今天的超时报表并导出CSV
+    @PostMapping("/generateTodayReport")
+    public Map<String, Object> generateTodayReport(HttpSession session) {
+        Map<String, Object> result = new HashMap<>();
+        Users user = getLoginUser(session);
+        if (user == null || !"ADMIN".equals(user.getRole())) {
+            result.put("success", false);
+            result.put("message", "无权限操作");
+            return result;
+        }
+
+        ExpiredOrderReport report = orderTask.generateTodayReportNow();
+        result.put("success", true);
+        result.put("message", "今日超时报表生成成功");
+        result.put("report", report);
+        return result;
+    }
+
+    @GetMapping("/exportCsv")
+    public ResponseEntity<?> exportCsv(@RequestParam(required = false) String date, HttpSession session) {
+        Users user = getLoginUser(session);
+        if (user == null || !"ADMIN".equals(user.getRole())) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", false);
+            result.put("message", "无权限操作");
+            return ResponseEntity.status(403).body(result);
+        }
+
+        LocalDate reportDate;
+        try {
+            reportDate = (date == null || date.isBlank()) ? LocalDate.now() : LocalDate.parse(date);
+        } catch (Exception e) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", false);
+            result.put("message", "日期格式错误，应为 yyyy-MM-dd");
+            return ResponseEntity.badRequest().body(result);
+        }
+
+        try {
+            Path csvPath = orderTask.generateAndExportReportCsvByDate(reportDate);
+            byte[] bytes = Files.readAllBytes(csvPath);
+            String fileName = csvPath.getFileName().toString();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                    .contentType(MediaType.parseMediaType("text/csv;charset=UTF-8"))
+                    .body(new ByteArrayResource(bytes));
+        } catch (IOException e) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", false);
+            result.put("message", "读取CSV文件失败");
+            return ResponseEntity.internalServerError().body(result);
+        } catch (RuntimeException e) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("success", false);
+            result.put("message", e.getMessage());
+            return ResponseEntity.internalServerError().body(result);
+        }
     }
 }
