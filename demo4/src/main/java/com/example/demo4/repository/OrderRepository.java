@@ -18,4 +18,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByStatusAndCreateTimeBefore(String status, LocalDateTime time);
 
     List<Order> findByStatusAndCreateTimeBetween(String status, LocalDateTime start, LocalDateTime end);
+
+    List<Order> findByPayTimeBetweenOrderByPayTimeAsc(LocalDateTime start, LocalDateTime end);
 }

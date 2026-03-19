@@ -25,5 +25,7 @@ public interface OrderService {
 
     ExpiredOrderReport generateExpiredReportByDate(LocalDate reportDate);
 
+    List<Order> getPaidOrdersByDate(LocalDate reportDate);
+
     List<ExpiredOrderReport> getAllExpiredReports();
 }

@@ -190,11 +190,7 @@ public class OrderServiceImpl implements OrderService {
             throw new RuntimeException("报表日期不能为空");
         }
 
-        // 避免重复生成
         Optional<ExpiredOrderReport> existing = reportRepository.findByReportDate(reportDate);
-        if (existing.isPresent()) {
-            return existing.get();
-        }
 
         LocalDateTime start = reportDate.atStartOfDay();
         LocalDateTime end = reportDate.plusDays(1).atStartOfDay();
@@ -207,12 +203,24 @@ public class OrderServiceImpl implements OrderService {
                 .map(Order::getOrderNo)
                 .collect(Collectors.joining(","));
 
-        ExpiredOrderReport report = new ExpiredOrderReport();
+        // 同一天报表支持重算覆盖，避免先生成后取消导致的数据不一致。
+        ExpiredOrderReport report = existing.orElseGet(ExpiredOrderReport::new);
         report.setReportDate(reportDate);
         report.setCancelledCount(cancelled.size());
         report.setTotalAmount(total);
         report.setOrderNos(orderNos.length() > 2000 ? orderNos.substring(0, 2000) : orderNos);
         return reportRepository.save(report);
+    }
+
+    @Override
+    public List<Order> getPaidOrdersByDate(LocalDate reportDate) {
+        if (reportDate == null) {
+            throw new RuntimeException("销售汇总日期不能为空");
+        }
+
+        LocalDateTime start = reportDate.atStartOfDay();
+        LocalDateTime end = reportDate.plusDays(1).atStartOfDay();
+        return orderRepository.findByPayTimeBetweenOrderByPayTimeAsc(start, end);
     }
 
     @Override
